@@ -74,6 +74,14 @@ def dev_command_options(f):
     help="Host to use for the Dagster webserver.",
     required=False,
 )
+@click.option(
+    "--path-prefix",
+    "-l",
+    type=click.STRING,
+    default="",
+    help="The path prefix where server will be hosted (eg: /dagster-webserver)",
+    show_default=True,
+)
 @deprecated(
     breaking_version="2.0", subject="--dagit-port and --dagit-host args", emit_runtime_warning=False
 )
@@ -81,6 +89,7 @@ def dev_command(
     code_server_log_level: str,
     port: Optional[str],
     host: Optional[str],
+    path_prefix: Optional[str],
     **kwargs: ClickArgValue,
 ) -> None:
     # check if dagster-webserver installed, crash if not
@@ -149,12 +158,14 @@ def dev_command(
 
         if kwargs.get("use_ssl"):
             args.extend(["--use-ssl"])
+        
 
         webserver_process = open_ipc_subprocess(
             [sys.executable, "-m", "dagster_webserver"]
             + (["--port", port] if port else [])
             + (["--host", host] if host else [])
             + args
+            + (["--path-prefix", path_prefix] if path_prefix else [])
         )
         daemon_process = open_ipc_subprocess(
             [sys.executable, "-m", "dagster._daemon", "run"] + args
